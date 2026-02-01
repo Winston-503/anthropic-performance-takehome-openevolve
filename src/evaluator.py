@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import importlib.util
-import os
 import random
 import sys
 import traceback
 from typing import Any
+
+from .utils import INITIAL_PROGRAM_PATH, TAKEHOME_DIR
 
 BASELINE = 147734
 
@@ -23,13 +24,10 @@ def _load_module_from_path(module_name: str, file_path: str) -> Any:
 
 
 def _get_frozen_problem_module() -> Any:
-    src_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(src_dir)
-    takehome_dir = os.path.join(project_root, "original_performance_takehome-main-5452f74")
-    frozen_problem_path = os.path.join(takehome_dir, "tests", "frozen_problem.py")
+    frozen_problem_path = f"{TAKEHOME_DIR}/tests/frozen_problem.py"
 
-    if takehome_dir not in sys.path:
-        sys.path.insert(0, takehome_dir)
+    if TAKEHOME_DIR not in sys.path:
+        sys.path.insert(0, TAKEHOME_DIR)
 
     return _load_module_from_path("frozen_problem", frozen_problem_path)
 
@@ -164,9 +162,5 @@ def evaluate_stage1(program_path: str) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    src_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(src_dir)
-    takehome_dir = os.path.join(project_root, "original_performance_takehome-main-5452f74")
-    initial_program_path = os.path.join(takehome_dir, "perf_takehome.py")
-    result = evaluate(initial_program_path)
+    result = evaluate(INITIAL_PROGRAM_PATH)
     print(f"Evaluation result: {result}")

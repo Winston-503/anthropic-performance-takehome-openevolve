@@ -15,19 +15,22 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # Pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "UP",  # pyupgrade
-    "PL",  # Pylint
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # Pyflakes
+    "I", # isort
+    "B", # flake8-bugbear
+    "UP", # pyupgrade
+    "PL", # Pylint
     "SIM", # flake8-simplify
     "RUF", # Ruff-specific rules
 ]
 
 [tool.ruff.lint.isort]
 known-first-party = ["openevolve"]
+
+[tool.ty.environment]
+root = [".", "src"]
 
 [dependency-groups]
 dev = [
