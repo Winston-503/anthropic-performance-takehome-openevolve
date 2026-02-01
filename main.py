@@ -1,11 +1,22 @@
 import asyncio
 
+import click
 from dotenv import load_dotenv
 
 from src import main
 
 load_dotenv()
 
+
+@click.command()
+@click.option(
+    "--config",
+    default="config-lightweight.yaml",
+    help="Path to the configuration file.",
+)
+def cli(config: str) -> None:
+    asyncio.run(main(config))
+
+
 if __name__ == "__main__":
-    config_filename = "config-lightweight.yaml"
-    asyncio.run(main(config_filename))
+    cli()

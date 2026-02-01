@@ -16,6 +16,7 @@ name = "anthropic-performance-takehome-openevolve"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "click" },
     { name = "openevolve" },
     { name = "python-dotenv" },
 ]
@@ -28,6 +29,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "click", specifier = ">=8.1.0" },
     { name = "openevolve", specifier = ">=0.2.26" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
 ]
