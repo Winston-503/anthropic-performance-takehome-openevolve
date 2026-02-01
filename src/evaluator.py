@@ -9,7 +9,7 @@ import traceback
 from types import ModuleType
 from typing import Any
 
-from .paths import INITIAL_PROGRAM_PATH, TAKEHOME_DIR
+from src.paths import INITIAL_PROGRAM_PATH, TAKEHOME_DIR
 
 BASELINE = 147734
 

@@ -3,7 +3,7 @@ import os
 from openevolve import Config, OpenEvolve
 from openevolve.database import Program
 
-from .paths import CONFIG_DIR, EVALUATOR_PATH, INITIAL_PROGRAM_PATH, create_output_dir
+from src.paths import CONFIG_DIR, EVALUATOR_PATH, INITIAL_PROGRAM_PATH, create_output_dir
 
 
 async def main(config_filename: str) -> Program | None:
