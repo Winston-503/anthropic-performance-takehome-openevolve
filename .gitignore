@@ -1,0 +1,17 @@
+# IDE
+.idea
+.vscode
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# OpenEvolve outputs
+openevolve_output/
+trace.json
+*.trace
+
+# Environment variables
+.env
