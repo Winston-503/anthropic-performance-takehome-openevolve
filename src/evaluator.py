@@ -22,8 +22,9 @@ def _load_module_from_path(module_name: str, file_path: str) -> Any:
 
 
 def _get_frozen_problem_module() -> Any:
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    takehome_dir = os.path.join(script_dir, "original_performance_takehome-main-5452f74")
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(src_dir)
+    takehome_dir = os.path.join(project_root, "original_performance_takehome-main-5452f74")
     frozen_problem_path = os.path.join(takehome_dir, "tests", "frozen_problem.py")
 
     if takehome_dir not in sys.path:
@@ -164,8 +165,9 @@ def evaluate_stage1(program_path: str) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    takehome_dir = os.path.join(script_dir, "original_performance_takehome-main-5452f74")
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(src_dir)
+    takehome_dir = os.path.join(project_root, "original_performance_takehome-main-5452f74")
     initial_program_path = os.path.join(takehome_dir, "perf_takehome.py")
     result = evaluate(initial_program_path)
     print(f"Evaluation result: {result}")
