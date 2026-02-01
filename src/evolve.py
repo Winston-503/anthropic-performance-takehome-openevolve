@@ -3,10 +3,10 @@
 import os
 import sys
 
+from openevolve import Config, OpenEvolve
+
 
 async def main():
-    from openevolve import Config, OpenEvolve
-
     src_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(src_dir)
     takehome_dir = os.path.join(project_root, "original_performance_takehome-main-5452f74")

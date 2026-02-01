@@ -6,6 +6,7 @@ import importlib.util
 import os
 import random
 import sys
+import traceback
 from typing import Any
 
 BASELINE = 147734
@@ -103,8 +104,6 @@ def evaluate(program_path: str) -> dict[str, Any]:
         }
 
     except Exception as e:
-        import traceback
-
         return {
             "combined_score": 0.0,
             "cycles": BASELINE * 2,
