@@ -4,16 +4,12 @@ import os
 import sys
 
 from openevolve import Config, OpenEvolve
+from src.utils import DEFAULT_CONFIG_PATH, EVALUATOR_PATH, INITIAL_PROGRAM_PATH, OUTPUT_DIR
 
 
-async def main():
-    src_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(src_dir)
-    takehome_dir = os.path.join(project_root, "original_performance_takehome-main-5452f74")
-    initial_program_path = os.path.join(takehome_dir, "perf_takehome.py")
-    evaluator_path = os.path.join(src_dir, "evaluator.py")
-    config_path = os.path.join(project_root, "config", "config.yaml")
-    output_dir = os.path.join(project_root, "openevolve_output")
+async def main(config_path: str | None = None):
+    if config_path is None:
+        config_path = DEFAULT_CONFIG_PATH
 
     if not os.environ.get("GEMINI_API_KEY"):
         print("Error: GEMINI_API_KEY environment variable is not set.")
@@ -23,17 +19,17 @@ async def main():
     config = Config.from_yaml(config_path)
 
     oe = OpenEvolve(
-        initial_program_path=initial_program_path,
-        evaluation_file=evaluator_path,
+        initial_program_path=INITIAL_PROGRAM_PATH,
+        evaluation_file=EVALUATOR_PATH,
         config=config,
-        output_dir=output_dir,
+        output_dir=OUTPUT_DIR,
     )
 
     print("Starting OpenEvolve optimization...")
-    print(f"Initial program: {initial_program_path}")
-    print(f"Evaluator: {evaluator_path}")
+    print(f"Initial program: {INITIAL_PROGRAM_PATH}")
+    print(f"Evaluator: {EVALUATOR_PATH}")
     print(f"Config: {config_path}")
-    print(f"Output directory: {output_dir}")
+    print(f"Output directory: {OUTPUT_DIR}")
     print()
 
     best = await oe.run(iterations=config.max_iterations)
@@ -43,6 +39,6 @@ async def main():
     print("Evolution complete!")
     print("=" * 60)
     print(f"Best score: {best.score if hasattr(best, 'score') else best}")
-    print(f"Results saved to: {output_dir}")
+    print(f"Results saved to: {OUTPUT_DIR}")
 
     return best
