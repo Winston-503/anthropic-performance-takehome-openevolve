@@ -46,6 +46,84 @@ prompt:
     - **store** (2 slots): store, vstore (vector store)
     - **flow** (1 slot): select, add_imm, vselect, halt, pause, cond_jump, jump, etc.
 
+    ## CRITICAL: Exact Instruction Formats
+
+    All numbers in instructions are SCRATCH ADDRESSES (except for const values and jump targets).
+    The first operand is typically the destination.
+
+    ### ALU Engine (scalar):
+    ```python
+    ("alu", (op, dest, a1, a2))  # dest = scratch[a1] op scratch[a2]
+    # ops: +, -, *, //, cdiv, ^, &, |, <<, >>, %, <, ==
+    ```
+
+    ### VALU Engine (vector - operates on VLEN=8 elements):
+    ```python
+    ("valu", ("vbroadcast", dest, src))           # dest[0:8] = scratch[src] (broadcast scalar to vector)
+    ("valu", ("multiply_add", dest, a, b, c))     # dest[i] = a[i] * b[i] + c[i]
+    ("valu", (op, dest, a1, a2))                  # dest[i] = a1[i] op a2[i] for i in 0..7
+    ```
+    IMPORTANT: For valu operations, ALL operands must be vector addresses (8 consecutive scratch locations).
+    To use a scalar constant with vectors, first use vbroadcast to create a vector version.
+
+    ### Load Engine:
+    ```python
+    ("load", ("const", dest, value))              # scratch[dest] = value (immediate constant)
+    ("load", ("load", dest, addr))                # scratch[dest] = mem[scratch[addr]]
+    ("load", ("load_offset", dest, addr, offset)) # scratch[dest+offset] = mem[scratch[addr+offset]]
+    ("load", ("vload", dest, addr))               # scratch[dest:dest+8] = mem[scratch[addr]:scratch[addr]+8]
+    ```
+    IMPORTANT: vload addr is a SCALAR scratch address containing the memory base address.
+
+    ### Store Engine:
+    ```python
+    ("store", ("store", addr, src))               # mem[scratch[addr]] = scratch[src]
+    ("store", ("vstore", addr, src))              # mem[scratch[addr]:scratch[addr]+8] = scratch[src:src+8]
+    ```
+    IMPORTANT: vstore addr is a SCALAR scratch address containing the memory base address.
+
+    ### Flow Engine:
+    ```python
+    ("flow", ("select", dest, cond, a, b))        # dest = a if cond != 0 else b
+    ("flow", ("vselect", dest, cond, a, b))       # dest[i] = a[i] if cond[i] != 0 else b[i]
+    ("flow", ("add_imm", dest, a, imm))           # dest = scratch[a] + imm (immediate add)
+    ("flow", ("halt",))                           # stop execution
+    ("flow", ("pause",))                          # pause (ignored in submission)
+    ("flow", ("cond_jump", cond, addr))           # if scratch[cond] != 0: pc = addr
+    ("flow", ("jump", addr))                      # pc = addr
+    ```
+
+    ## Example: Correct Vectorization Pattern
+
+    To vectorize scalar operations, you need to:
+    1. Allocate vector scratch space (VLEN=8 consecutive addresses)
+    2. Use vbroadcast to convert scalar constants to vectors
+    3. Compute memory addresses in scalar scratch, then use vload/vstore
+
+    ```python
+    # Allocate vector scratch (8 elements each)
+    v_data = self.alloc_scratch("v_data", VLEN)      # addresses 0-7
+    v_result = self.alloc_scratch("v_result", VLEN)  # addresses 8-15
+    v_const = self.alloc_scratch("v_const", VLEN)    # addresses 16-23
+
+    # Scalar scratch for addresses
+    addr_reg = self.alloc_scratch("addr_reg")        # address 24
+
+    # Load a constant and broadcast to vector
+    self.add("load", ("const", addr_reg, 2))         # addr_reg = 2
+    body.append(("valu", ("vbroadcast", v_const, addr_reg)))  # v_const[0:8] = 2
+
+    # Compute base address for vload (must be in scratch)
+    self.add("load", ("const", addr_reg, some_mem_addr))
+    body.append(("load", ("vload", v_data, addr_reg)))  # load 8 elements from mem[addr_reg]
+
+    # Vector arithmetic (all operands are vector addresses)
+    body.append(("valu", ("*", v_result, v_data, v_const)))  # v_result = v_data * v_const
+
+    # Store back
+    body.append(("store", ("vstore", addr_reg, v_result)))
+    ```
+
     ## Key Algorithm Being Optimized
     The kernel performs parallel tree traversal where for each batch element:
     1. Load current index and value from memory
@@ -73,6 +151,14 @@ prompt:
 
     ## Current Baseline
     The baseline implementation runs at ~147,734 cycles. Top solutions achieve under 1,500 cycles.
+
+    ## Full Machine Definition (problem.py)
+
+    Study this carefully to understand the exact instruction semantics:
+
+    ```python
+    {problem_py}
+    ```
 
   num_top_programs: 3
   num_diverse_programs: 2

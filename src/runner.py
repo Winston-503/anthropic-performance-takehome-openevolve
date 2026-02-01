@@ -1,14 +1,14 @@
 import os
 
-from openevolve import Config, OpenEvolve
+from openevolve import OpenEvolve
 from openevolve.database import Program
-
-from src.paths import CONFIG_DIR, EVALUATOR_PATH, INITIAL_PROGRAM_PATH, create_output_dir
+from src.paths import CONFIG_DIR, EVALUATOR_PATH, INITIAL_PROGRAM_PATH
+from src.utils import create_output_dir, load_config
 
 
 async def main(config_filename: str) -> Program | None:
     config_path = os.path.join(CONFIG_DIR, config_filename)
-    config = Config.from_yaml(config_path)
+    config = load_config(config_filename)
 
     output_path = create_output_dir(config_filename)
 
