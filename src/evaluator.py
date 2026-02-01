@@ -6,14 +6,15 @@ import importlib.util
 import random
 import sys
 import traceback
+from types import ModuleType
 from typing import Any
 
-from .utils import INITIAL_PROGRAM_PATH, TAKEHOME_DIR
+from .paths import INITIAL_PROGRAM_PATH, TAKEHOME_DIR
 
 BASELINE = 147734
 
 
-def _load_module_from_path(module_name: str, file_path: str) -> Any:
+def _load_module_from_path(module_name: str, file_path: str) -> ModuleType:
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Could not load module from {file_path}")
@@ -23,7 +24,7 @@ def _load_module_from_path(module_name: str, file_path: str) -> Any:
     return module
 
 
-def _get_frozen_problem_module() -> Any:
+def _get_frozen_problem_module() -> ModuleType:
     frozen_problem_path = f"{TAKEHOME_DIR}/tests/frozen_problem.py"
 
     if TAKEHOME_DIR not in sys.path:
