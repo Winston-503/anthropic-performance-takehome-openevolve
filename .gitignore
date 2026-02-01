@@ -9,9 +9,7 @@ ENV/
 .venv
 
 # OpenEvolve outputs
-openevolve_output/
-trace.json
-*.trace
+results/
 
 # Environment variables
 .env
