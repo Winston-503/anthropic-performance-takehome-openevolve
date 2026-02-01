@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-async def main() -> None:
+async def main():
     from openevolve import Config, OpenEvolve
 
     script_dir = os.path.dirname(os.path.abspath(__file__))

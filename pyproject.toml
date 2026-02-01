@@ -33,4 +33,5 @@ known-first-party = ["openevolve"]
 [dependency-groups]
 dev = [
     "ruff>=0.14.14",
+    "ty>=0.0.14",
 ]
