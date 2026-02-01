@@ -1,0 +1,77 @@
+# OpenEvolve Configuration for Anthropic Performance Takehome
+# Using Gemini 2.0 Flash for initial testing with small iterations
+
+max_iterations: 20
+random_seed: 42
+
+llm:
+  models:
+    - name: "gemini-2.0-flash"
+      weight: 1.0
+      api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
+      api_key: "${GEMINI_API_KEY}"
+
+  temperature: 0.7
+  max_tokens: 8192
+
+database:
+  population_size: 50
+  archive_size: 20
+  num_islands: 2
+  feature_dimensions: ["complexity", "diversity"]
+  feature_bins: 5
+  migration_interval: 10
+
+evaluator:
+  timeout: 120
+  parallel_evaluations: 1
+  cascade_evaluation: true
+  cascade_thresholds: [0.5, 0.75]
+
+prompt:
+  system_message: |
+    You are an expert performance engineer optimizing code for a custom VLIW SIMD architecture.
+
+    ## Target Architecture
+    This is a Very Long Instruction Word (VLIW) Single Instruction Multiple Data (SIMD) machine:
+
+    - **VLIW**: Each instruction can contain multiple operations across different "engines" that execute in parallel within a single cycle
+    - **SIMD**: Vector operations process VLEN=8 elements simultaneously
+
+    ## Available Engines and Slot Limits (per cycle)
+    - **alu** (12 slots): Scalar operations: +, -, *, //, cdiv, ^, &, |, <<, >>, %, <, ==
+    - **valu** (6 slots): Vector operations on 8 elements: vbroadcast, multiply_add, and same ops as alu
+    - **load** (2 slots): load, load_offset, vload (vector load), const
+    - **store** (2 slots): store, vstore (vector store)
+    - **flow** (1 slot): select, add_imm, vselect, halt, pause, cond_jump, jump, etc.
+
+    ## Key Algorithm Being Optimized
+    The kernel performs parallel tree traversal where for each batch element:
+    1. Load current index and value from memory
+    2. Load tree node value at current index
+    3. XOR value with node value, then apply hash function (6 stages)
+    4. Choose left or right branch based on hash result parity
+    5. Wrap index if past tree bounds
+    6. Store updated index and value
+
+    This repeats for `rounds` iterations over `batch_size` elements.
+
+    ## Optimization Strategies to Consider
+    1. **VLIW Packing**: Combine independent operations into the same instruction bundle
+    2. **Vectorization**: Process 8 batch elements at once using valu/vload/vstore
+    3. **Loop restructuring**: Unroll loops or reorder operations to expose parallelism
+    4. **Memory access optimization**: Batch loads/stores, use vload/vstore for contiguous data
+    5. **Register allocation**: Minimize scratch memory thrashing
+    6. **Instruction scheduling**: Hide latencies by interleaving independent operations
+
+    ## Constraints
+    - SCRATCH_SIZE = 1536 words available
+    - Must produce correct output values matching reference_kernel2
+    - debug instructions are ignored in submission testing
+    - pause instructions are ignored in submission testing
+
+    ## Current Baseline
+    The baseline implementation runs at ~147,734 cycles. Top solutions achieve under 1,500 cycles.
+
+  num_top_programs: 3
+  num_diverse_programs: 2

@@ -85,6 +85,7 @@ class KernelBuilder:
 
         return slots
 
+    # EVOLVE-BLOCK-START
     def build_kernel(
         self, forest_height: int, n_nodes: int, batch_size: int, rounds: int
     ):
@@ -172,6 +173,8 @@ class KernelBuilder:
         self.instrs.extend(body_instrs)
         # Required to match with the yield in reference_kernel2
         self.instrs.append({"flow": [("pause",)]})
+    # EVOLVE-BLOCK-END
+
 
 BASELINE = 147734
 
