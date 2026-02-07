@@ -14,8 +14,13 @@ load_dotenv()
     default="config-gemini.yaml",
     help="Path to the configuration file.",
 )
-def cli(config: str) -> None:
-    asyncio.run(main(config))
+@click.option(
+    "--checkpoint",
+    default=None,
+    help="Path to a checkpoint directory to resume from.",
+)
+def cli(config: str, checkpoint: str | None) -> None:
+    asyncio.run(main(config, checkpoint=checkpoint))
 
 
 if __name__ == "__main__":
