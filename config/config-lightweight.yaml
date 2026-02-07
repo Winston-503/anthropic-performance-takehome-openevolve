@@ -3,7 +3,8 @@
 
 max_iterations: 15
 checkpoint_interval: 5
-max_code_length: 20000
+max_code_length: 1000000
+random_seed: null
 
 llm:
   models:
@@ -13,8 +14,8 @@ llm:
       api_key: "${GEMINI_API_KEY}"
 
   temperature: 0.7
-  max_tokens: 32768
-  timeout: 180
+  max_tokens: 64000
+  timeout: 600
 
 database:
   population_size: 50
@@ -161,5 +162,9 @@ prompt:
     {problem_py}
     ```
 
+  suggest_simplification_after_chars: null
+  concise_implementation_max_lines: null
+  comprehensive_implementation_min_lines: null
+  diff_summary_max_lines: 10000
   num_top_programs: 3
   num_diverse_programs: 2
