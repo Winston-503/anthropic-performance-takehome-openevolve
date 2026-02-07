@@ -1,4 +1,10 @@
-"""Evaluator for OpenEvolve optimization of the Anthropic Performance Takehome."""
+"""Evaluator for OpenEvolve optimization of the Anthropic Performance Takehome.
+
+Uses the same test logic as tests/submission_tests.py:
+- frozen_problem for reference kernel
+- Same parameters (forest_height=10, rounds=16, batch_size=256) for performance stages
+- BASELINE=147734 cycles for the full problem
+"""
 
 from __future__ import annotations
 
@@ -33,127 +39,68 @@ def _get_frozen_problem_module() -> ModuleType:
     return _load_module_from_path("frozen_problem", frozen_problem_path)
 
 
-def evaluate(program_path: str) -> dict[str, Any]:
-    try:
-        frozen_problem = _get_frozen_problem_module()
-        Machine = frozen_problem.Machine
-        build_mem_image = frozen_problem.build_mem_image
-        reference_kernel2 = frozen_problem.reference_kernel2
-        Tree = frozen_problem.Tree
-        Input = frozen_problem.Input
-        N_CORES = frozen_problem.N_CORES
+def _run_kernel_test(
+    KernelBuilder,
+    frozen_problem,
+    forest_height: int,
+    rounds: int,
+    batch_size: int,
+) -> tuple[int, bool]:
+    """Run a single kernel test — same logic as submission_tests.do_kernel_test.
 
-        evolved_module = _load_module_from_path("evolved_program", program_path)
-        KernelBuilder = evolved_module.KernelBuilder
+    Returns (cycles, correct).
+    """
+    forest = frozen_problem.Tree.generate(forest_height)
+    inp = frozen_problem.Input.generate(forest, batch_size, rounds)
+    mem = frozen_problem.build_mem_image(forest, inp)
 
-        forest_height = 10
-        rounds = 16
-        batch_size = 256
+    kb = KernelBuilder()
+    kb.build_kernel(forest.height, len(forest.values), len(inp.indices), rounds)
 
-        cycles_list = []
-        for _ in range(8):
-            forest = Tree.generate(forest_height)
-            inp = Input.generate(forest, batch_size, rounds)
-            mem = build_mem_image(forest, inp)
+    machine = frozen_problem.Machine(mem, kb.instrs, kb.debug_info(), n_cores=frozen_problem.N_CORES)
+    machine.enable_pause = False
+    machine.enable_debug = False
+    machine.run()
 
-            kb = KernelBuilder()
-            kb.build_kernel(forest.height, len(forest.values), len(inp.indices), rounds)
+    ref_mem = None
+    for ref_mem in frozen_problem.reference_kernel2(mem):  # noqa: B007
+        pass
 
-            machine = Machine(mem, kb.instrs, kb.debug_info(), n_cores=N_CORES)
-            machine.enable_pause = False
-            machine.enable_debug = False
-            machine.run()
+    if ref_mem is None:
+        return (0, False)
 
-            ref_mem = None
-            for ref_mem in reference_kernel2(mem):  # noqa: B007
-                pass
+    inp_values_p = ref_mem[6]
+    actual = machine.mem[inp_values_p : inp_values_p + len(inp.values)]
+    expected = ref_mem[inp_values_p : inp_values_p + len(inp.values)]
 
-            if ref_mem is None:
-                return {
-                    "combined_score": 0.0,
-                    "cycles": BASELINE * 2,
-                    "speedup": 0.5,
-                    "correctness": 0,
-                    "error": "Reference kernel returned no result",
-                }
+    return (machine.cycle, actual == expected)
 
-            inp_values_p = ref_mem[6]
-            actual = machine.mem[inp_values_p : inp_values_p + len(inp.values)]
-            expected = ref_mem[inp_values_p : inp_values_p + len(inp.values)]
-            if actual != expected:
-                return {
-                    "combined_score": 0.0,
-                    "cycles": BASELINE * 2,
-                    "speedup": 0.5,
-                    "correctness": 0,
-                    "error": "Incorrect output values",
-                }
 
-            cycles_list.append(machine.cycle)
-
-        cycles = max(cycles_list)
-        speedup = BASELINE / cycles
-        combined_score = (BASELINE / cycles) * 10
-
-        return {
-            "combined_score": combined_score,
-            "cycles": cycles,
-            "speedup": speedup,
-            "correctness": 1,
-        }
-
-    except Exception as e:
-        return {
-            "combined_score": 0.0,
-            "cycles": BASELINE * 2,
-            "speedup": 0.5,
-            "correctness": 0,
-            "error": str(e),
-            "traceback": traceback.format_exc(),
-        }
+def _error_result() -> dict[str, Any]:
+    return {
+        "combined_score": 0.0,
+        "cycles": BASELINE * 2,
+        "speedup": 0.5,
+        "correctness": 0,
+    }
 
 
 def evaluate_stage1(program_path: str) -> dict[str, Any]:
+    """Quick correctness check with small problem size."""
     try:
         frozen_problem = _get_frozen_problem_module()
-        Machine = frozen_problem.Machine
-        build_mem_image = frozen_problem.build_mem_image
-        reference_kernel2 = frozen_problem.reference_kernel2
-        Tree = frozen_problem.Tree
-        Input = frozen_problem.Input
-        N_CORES = frozen_problem.N_CORES
-
         evolved_module = _load_module_from_path("evolved_program", program_path)
-        KernelBuilder = evolved_module.KernelBuilder
-
-        forest_height = 5
-        rounds = 4
-        batch_size = 64
 
         random.seed(42)
-        forest = Tree.generate(forest_height)
-        inp = Input.generate(forest, batch_size, rounds)
-        mem = build_mem_image(forest, inp)
+        _cycles, correct = _run_kernel_test(
+            evolved_module.KernelBuilder,
+            frozen_problem,
+            forest_height=5,
+            rounds=4,
+            batch_size=64,
+        )
 
-        kb = KernelBuilder()
-        kb.build_kernel(forest.height, len(forest.values), len(inp.indices), rounds)
-
-        machine = Machine(mem, kb.instrs, kb.debug_info(), n_cores=N_CORES)
-        machine.enable_pause = False
-        machine.enable_debug = False
-        machine.run()
-
-        ref_mem = None
-        for ref_mem in reference_kernel2(mem):  # noqa: B007
-            pass
-
-        if ref_mem is None:
-            return {"quick_score": 0.0, "correctness": 0, "combined_score": 0.0}
-
-        inp_values_p = ref_mem[6]
-        actual = machine.mem[inp_values_p : inp_values_p + len(inp.values)]
-        expected = ref_mem[inp_values_p : inp_values_p + len(inp.values)]
-        if actual != expected:
+        if not correct:
             return {"quick_score": 0.0, "correctness": 0, "combined_score": 0.0}
 
         return {"quick_score": 1.0, "correctness": 1, "combined_score": 1.0}
@@ -163,84 +110,77 @@ def evaluate_stage1(program_path: str) -> dict[str, Any]:
 
 
 def evaluate_stage2(program_path: str) -> dict[str, Any]:
-    """Medium-fidelity evaluation with more test cases than stage1."""
+    """Medium-fidelity evaluation — full problem size, 3 runs."""
     try:
         frozen_problem = _get_frozen_problem_module()
-        Machine = frozen_problem.Machine
-        build_mem_image = frozen_problem.build_mem_image
-        reference_kernel2 = frozen_problem.reference_kernel2
-        Tree = frozen_problem.Tree
-        Input = frozen_problem.Input
-        N_CORES = frozen_problem.N_CORES
-
         evolved_module = _load_module_from_path("evolved_program", program_path)
-        KernelBuilder = evolved_module.KernelBuilder
-
-        forest_height = 8
-        rounds = 8
-        batch_size = 128
 
         cycles_list = []
         for _ in range(3):
-            forest = Tree.generate(forest_height)
-            inp = Input.generate(forest, batch_size, rounds)
-            mem = build_mem_image(forest, inp)
+            cycles, correct = _run_kernel_test(
+                evolved_module.KernelBuilder,
+                frozen_problem,
+                forest_height=10,
+                rounds=16,
+                batch_size=256,
+            )
+            if not correct:
+                return {**_error_result(), "error": "Incorrect output values"}
+            cycles_list.append(cycles)
 
-            kb = KernelBuilder()
-            kb.build_kernel(forest.height, len(forest.values), len(inp.indices), rounds)
-
-            machine = Machine(mem, kb.instrs, kb.debug_info(), n_cores=N_CORES)
-            machine.enable_pause = False
-            machine.enable_debug = False
-            machine.run()
-
-            ref_mem = None
-            for ref_mem in reference_kernel2(mem):  # noqa: B007
-                pass
-
-            if ref_mem is None:
-                return {
-                    "combined_score": 0.0,
-                    "cycles": BASELINE * 2,
-                    "speedup": 0.5,
-                    "correctness": 0,
-                    "error": "Reference kernel returned no result",
-                }
-
-            inp_values_p = ref_mem[6]
-            actual = machine.mem[inp_values_p : inp_values_p + len(inp.values)]
-            expected = ref_mem[inp_values_p : inp_values_p + len(inp.values)]
-            if actual != expected:
-                return {
-                    "combined_score": 0.0,
-                    "cycles": BASELINE * 2,
-                    "speedup": 0.5,
-                    "correctness": 0,
-                    "error": "Incorrect output values",
-                }
-
-            cycles_list.append(machine.cycle)
-
-        cycles = max(cycles_list)
-        speedup = BASELINE / cycles
-        combined_score = (BASELINE / cycles) * 10
+        max_cycles = max(cycles_list)
+        speedup = BASELINE / max_cycles
 
         return {
-            "combined_score": combined_score,
-            "cycles": cycles,
+            "combined_score": speedup * 10,
+            "cycles": max_cycles,
             "speedup": speedup,
             "correctness": 1,
         }
 
     except Exception as e:
+        return {**_error_result(), "error": str(e), "traceback": traceback.format_exc()}
+
+
+def evaluate_stage3(program_path: str) -> dict[str, Any]:
+    """Full-fidelity evaluation matching submission_tests exactly.
+
+    Same parameters as tests/submission_tests.py:
+    forest_height=10, rounds=16, batch_size=256, 8 runs, max cycles.
+    """
+    try:
+        frozen_problem = _get_frozen_problem_module()
+        evolved_module = _load_module_from_path("evolved_program", program_path)
+
+        cycles_list = []
+        for _ in range(8):
+            cycles, correct = _run_kernel_test(
+                evolved_module.KernelBuilder,
+                frozen_problem,
+                forest_height=10,
+                rounds=16,
+                batch_size=256,
+            )
+            if not correct:
+                return {**_error_result(), "error": "Incorrect output values"}
+            cycles_list.append(cycles)
+
+        max_cycles = max(cycles_list)
+        speedup = BASELINE / max_cycles
+
         return {
-            "combined_score": 0.0,
-            "cycles": BASELINE * 2,
-            "speedup": 0.5,
-            "correctness": 0,
-            "error": str(e),
-            "traceback": traceback.format_exc(),
+            "combined_score": speedup * 10,
+            "cycles": max_cycles,
+            "speedup": speedup,
+            "correctness": 1,
         }
+
+    except Exception as e:
+        return {**_error_result(), "error": str(e), "traceback": traceback.format_exc()}
+
+
+# Alias for direct use (e.g. __main__, non-cascade mode)
+evaluate = evaluate_stage3
 
 
 if __name__ == "__main__":
