@@ -11,7 +11,7 @@ load_dotenv()
 @click.command()
 @click.option(
     "--config",
-    default="config-lightweight.yaml",
+    default="config-gemini.yaml",
     help="Path to the configuration file.",
 )
 def cli(config: str) -> None:

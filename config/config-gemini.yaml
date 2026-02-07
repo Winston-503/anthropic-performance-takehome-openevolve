@@ -8,7 +8,7 @@ random_seed: null
 
 llm:
   models:
-    - name: "gemini-2.0-flash"
+    - name: "gemini-3-pro-preview"
       weight: 1.0
       api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
       api_key: "${GEMINI_API_KEY}"
