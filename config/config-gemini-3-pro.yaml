@@ -1,7 +1,7 @@
 # OpenEvolve Configuration for Anthropic Performance Takehome
-# Using Gemini 2.0 Flash for initial testing with small iterations
+# Using Gemini 3 Pro
 
-max_iterations: 15
+max_iterations: 30
 checkpoint_interval: 5
 max_code_length: 1000000
 random_seed: null

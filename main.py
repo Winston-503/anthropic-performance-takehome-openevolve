@@ -11,7 +11,7 @@ load_dotenv()
 @click.command()
 @click.option(
     "--config",
-    default="config-gemini.yaml",
+    default="config-gemini-3-pro.yaml",
     help="Path to the configuration file.",
 )
 @click.option(
