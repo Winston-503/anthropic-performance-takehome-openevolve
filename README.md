@@ -26,8 +26,8 @@ uv sync
 cp .env.example .env  # add your GEMINI_API_KEY
 
 # Run optimization
-python main.py --config config-gemini.yaml
+python main.py --config config-gemini-3-pro.yaml
 
 # Resume from checkpoint
-python main.py --config config-gemini.yaml --checkpoint results/<run>/checkpoints/checkpoint_15
+python main.py --config config-gemini-3-pro.yaml --checkpoint results/<run>/checkpoints/checkpoint_15
 ```
