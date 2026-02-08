@@ -2,7 +2,7 @@
 
 Using [OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve) to automatically optimize [Anthropic's performance take-home challenge](https://github.com/anthropics/original_performance_takehome).
 
-For a detailed write-up, see [the blog post](TODO).
+For a detailed write-up, see [the blog post](https://dmytro.bearblog.dev/anthropic-performance-takehome-openevolve/).
 
 ## Results
 
