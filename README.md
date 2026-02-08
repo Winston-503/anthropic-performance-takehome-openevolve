@@ -8,7 +8,7 @@ For a detailed write-up, see [the blog post](TODO).
 
 Gemini 3 Pro reaches **2,160 cycles** (68.4x speedup) in 15 iterations (~30 mins, ~$3) beating "Claude Opus 4 after many hours in the test-time compute harness", but then plateaus.
 
-![Speedup vs Iteration](assets/speedup_vs_iteration_full_45.png)
+![Speedup vs Iteration](assets/result_gemini_3_pro_45.png)
 
 ### Key observations
 
