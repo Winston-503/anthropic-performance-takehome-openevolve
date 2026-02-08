@@ -11,5 +11,8 @@ ENV/
 # OpenEvolve outputs
 results/
 
+# Takehome outputs
+trace.json
+
 # Environment variables
 .env
