@@ -16,6 +16,10 @@ Gemini 3 Pro reaches **2,160 cycles** (68.4x speedup) in 15 iterations (~30 mins
 - Most improvement happens in sudden jumps (1x -> 11x -> 56x -> 68x), not gradual gains
 - 39% of evolved programs fail, with failures concentrated in the early generations before the system stabilizes
 
+### Other models
+
+I considered turning this into a multimodel benchmark, but the other models didn't perform well enough to make it meaningful in the current setup. OpenAI GPT-5.2 managed only a 3.84x speedup after 30 iterations, and Claude Sonnet 4.5 didn't improve beyond baseline within 20 iteration, at which point I was heavily rate-limited.
+
 ## Usage
 
 ```bash
